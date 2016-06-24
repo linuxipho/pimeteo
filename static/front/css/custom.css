@@ -1,7 +1,6 @@
 html, body {
     background: url('../img/sand.png');
 }
-
 #main .ui.top.attached.menu {
     margin-top: 2em;
 }
@@ -33,10 +32,10 @@ html, body {
     margin-top: -2rem;
 }
 #main .webcam {
-	border: 1px #666 solid;
-	padding: 0;
-	margin-left: -1px;
-	margin-right: -1px;
+    border: 1px #666 solid;
+    padding: 0;
+    margin-left: -1px;
+    margin-right: -1px;
 }
 #main.cam {
     max-height: 600px;
