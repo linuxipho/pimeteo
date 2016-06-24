@@ -1,3 +1,4 @@
+
 html, body {
     background: url('../img/sand.png');
 }
@@ -41,7 +42,7 @@ html, body {
     max-height: 600px;
 }
 #main .status {
-  float: right;
-  margin-top: -12px;
-  margin-right: -4px;
+    float: right;
+    margin-top: -12px;
+    margin-right: -4px;
 }
