@@ -1,0 +1,48 @@
+html, body {
+    background: url('../img/sand.png');
+}
+
+#main .ui.top.attached.menu {
+    margin-top: 2em;
+}
+#main .about-space {
+    margin-bottom: 1rem;
+}
+#main .space {
+    margin-top: 1rem;
+}
+#main .ui.ribbon.label.inside {
+    margin-left: -1.1rem;
+}
+#main .unit {
+    font-size: 0.9em;
+    color: #999;
+}
+#main .tab-title {
+    font-size: 0.9em;
+    color: #999;
+    font-weight: normal;
+}
+#main .column {
+    height: 300px;
+}
+#main .footer {
+    margin-bottom: 100px;
+}
+#main .logos {
+    margin-top: -2rem;
+}
+#main .webcam {
+	border: 1px #666 solid;
+	padding: 0;
+	margin-left: -1px;
+	margin-right: -1px;
+}
+#main.cam {
+    max-height: 600px;
+}
+#main .status {
+  float: right;
+  margin-top: -12px;
+  margin-right: -4px;
+}
