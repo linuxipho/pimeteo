@@ -19,17 +19,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['YOUR HOST']
 
-# Django Suit configuration
-SUIT_CONFIG = {
-    'ADMIN_NAME': 'PiMeteo',
-    'HEADER_DATE_FORMAT': 'l d F Y',
-}
-
 # Application definition
 
 INSTALLED_APPS = (
     'gunicorn',
-    'suit',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
