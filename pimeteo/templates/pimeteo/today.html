@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+
+{% block highcharts %}<script src="https://code.highcharts.com/highcharts.js"></script>{% endblock %}
+{% block title %}PiMeteo - Station météo DIY à Montpellier{% endblock %}
+{% block active_home %}active{% endblock %}
+{% block status %}
+    		<div class="right menu">
+			<div class="ui simple dropdown item">
+				Etat des services <i class="dropdown icon"></i>
+           <div class="menu">
+              <a class="item">Mesures
+                {% if data_status %}
+                  <i class="ui green empty circular status label" title="tout va bien"></i>
+                {% else %}
+                    <i class="ui orange empty circular status label" title="la station rencontre un problème de connexion..."></i>
+                {% endif %}
+              </a>
+              <a class="item">Webcam
+                {% if cam_status %}
+                  <i class="ui green empty circular status label" title="tout va bien"></i>
+                {% else %}
+                  <i class="ui orange empty circular status label" title="la station rencontre un problème de connexion..."></i>
+                {% endif %}
+              </a>
+            </div>
+			</div>
+		</div>
+{% endblock %}
+
+{% block content %}
+	<div class="ui basic attached segment webcam">
+		<div class="ui fluid image">
+            <img src="/static/media/view/large/{{ pict_time.time|date:"YmdHi" }}.jpg" alt="image en cours de chargement..." class="cam">
+		</div>
+	</div>
+
+    <div class="ui attached segment">
+
+        <!--
+		<div class="ui teal large ribbon label spaced"><i class="sort content ascending icon"></i> Dernières mesures </div>
+		-->
+
+        <table class="ui unstackable compact celled definition table">
+            <thead>
+                <tr>
+                    <th class="four wide"></th>
+                    <th class="three wide">Température</th>
+                    <th class="three wide">Pression</th>
+                    <th class="three wide">Humidité</th>
+                    <th class="three wide">Point de rosée</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="positive">
+                    <td>Actuellement ( {{ now_data.time|time:"H:i" }} )</td>
+                    <td>{{ now_data.temp|stringformat:".1f" }}<span class="unit">&nbsp;°C</span></td>
+                    <td>{{ now_data.press|stringformat:".1f" }}<span class="unit">&nbsp;hPa</span></td>
+                    <td>{{ now_data.moist|stringformat:".1f" }}<span class="unit">&nbsp;%</span></td>
+                    <td>{{ now_data.dew|stringformat:".1f" }}<span class="unit">&nbsp;°C</span></td>
+                </tr>
+                <tr>
+                    <td>Maxi<span class="tab-title">&nbsp;&nbsp;aujourd'hui</span></td>
+                    <td>{{ max_data.temp__max|stringformat:".1f" }}<span class="unit">&nbsp;°C</span></td>
+                    <td>{{ max_data.press__max|stringformat:".1f" }}<span class="unit">&nbsp;hPa</span></td>
+                    <td>{{ max_data.moist__max|stringformat:".1f" }}<span class="unit">&nbsp;%</span></td>
+                    <td>{{ max_data.dew__max|stringformat:".1f" }}<span class="unit">&nbsp;°C</span></td>
+                </tr>
+                <tr>
+                    <td>Mini<span class="tab-title">&nbsp;&nbsp;aujourd'hui</span></td>
+                    <td>{{ min_data.temp__min|stringformat:".1f" }}<span class="unit">&nbsp;°C</span></td>
+                    <td>{{ min_data.press__min|stringformat:".1f" }}<span class="unit">&nbsp;hPa</span></td>
+                    <td>{{ min_data.moist__min|stringformat:".1f" }}<span class="unit">&nbsp;%</span></td>
+                    <td>{{ min_data.dew__min|stringformat:".1f" }}<span class="unit">&nbsp;°C</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+    <!--</div>
+    <div class="ui attached segment">-->
+
+        <div class="ui teal large ribbon label space"><i class="bar chart icon"></i> Graphiques des 24 dernières heures </div>
+
+        <div class="ui equal width grid">
+            <div class="column" id="temp"></div>
+            <div class="column" id="press"></div>
+            <div class="equal width row">
+                <div class="column" id="moist"></div>
+                <div class="column" id="dew"></div>
+            </div>
+        </div>
+
+        <script>
+
+    $(function () {
+
+        Highcharts.setOptions({
+            //global: {
+            //    timezoneOffset: -2 * 60 // UTC+2
+            //},
+            lang: {
+                decimalPoint: ","
+            },
+            credits: {
+                enabled: false
+            }
+        });
+
+        //var minuit = ( {{ midnight|date:"U"}} + {{ midnight|date:"Z"}} ) * 1000;
+		var minuit = {{midnight|date:"U"}}*1000;
+
+        // Temperature chart
+        $('#temp').highcharts({
+            chart: {
+                type: 'spline'
+                //zoomType: 'x'
+            },
+            title: {
+                text: null //'Température'
+            },
+            subtitle: {
+                text: 'Température sous abris ventilé ( ±0,35 °C )'
+            },
+            xAxis: {
+                type: 'datetime',
+                gridLineWidth: 1,
+                dateTimeLabelFormats: {
+                    minute: '%H:%M'
+                },
+                plotBands: [{
+                    color: '#F9FAFB',
+                    from: minuit - 86400000,
+                    to: minuit
+                }]
+            },
+            yAxis: {
+                title: {
+                    text: null
+                }//,
+                //labels: {
+                //    format: '{value} °C',
+                //    style: {
+                //        color: Highcharts.getOptions().colors[1]
+                //    }
+                //}
+            },
+            tooltip: {
+                headerFormat: '{series.name} à {point.x:%H\h%M}<br>',
+                pointFormat: '<b>{point.y:.1f}</b> °C',
+                crosshairs: [true]
+            },
+            legend: {
+                enabled: false
+            },
+            series: [{
+                name: 'Température',
+                color: '#00B5AD',
+                marker: {
+                    enabled: false
+                },
+                //shadow : true,
+                data: [{% for data in graph_data %}[({{ data.time|date:"U" }}+{{ data.time|date:"Z"}})*1000,{{ data.temp|stringformat:".2f" }}]{% if not forloop.last %},{% endif %}{% endfor %}]
+            }]
+        });
+
+        // Pression chart
+        $('#press').highcharts({
+            chart: {
+                type: 'spline',
+                //zoomType: 'x'
+            },
+            title: {
+                text: null //'Pression atmosphérique'
+            },
+            subtitle: {
+                text: 'Pression ramenée au niveau de la mer ( hPa )'
+            },
+            xAxis: {
+                type: 'datetime',
+                gridLineWidth: 1,
+                dateTimeLabelFormats: {
+                    minute: '%H:%M'
+                },
+                plotBands: [{
+                    color: '#F9FAFB',
+                    from: minuit - 86400000,
+                    to: minuit
+                }]
+            },
+            yAxis: {
+                title: {
+                    text: null
+                }//,
+                //labels: {
+                //    format: '{value} hPa',
+                //    style: {
+                //        color: Highcharts.getOptions().colors[1]
+                //    }
+                //}
+            },
+            tooltip: {
+                headerFormat: '{series.name} à {point.x:%H\h%M}<br>',
+                pointFormat: '<b>{point.y:.1f}</b> hPa',
+                crosshairs: [true]
+            },
+            legend: {
+                enabled: false
+            },
+            series: [{
+                name: 'Pression',
+                color: '#00B5AD',
+                marker: {
+                    enabled: false
+                },
+                //shadow : true,
+                data: [{% for data in graph_data %}[({{ data.time|date:"U" }}+{{ data.time|date:"Z"}})*1000,{{ data.press|stringformat:".2f" }}]{% if not forloop.last %},{% endif %}{% endfor %}]
+            }]
+        });
+
+        // Moisture chart
+        $('#moist').highcharts({
+            chart: {
+                type: 'spline',
+                //zoomType: 'x'
+            },
+            title: {
+                text: null //'Humidité relative'
+            },
+            subtitle: {
+                text: 'Humidité relative ( ±2 % )'
+            },
+            xAxis: {
+                type: 'datetime',
+                gridLineWidth: 1,
+                dateTimeLabelFormats: {
+                    minute: '%H:%M'
+                },
+                plotBands: [{
+                    color: '#F9FAFB',
+                    from: minuit - 86400000,
+                    to: minuit
+                }]
+            },
+            yAxis: {
+                title: {
+                    text: null
+                }//,
+                //labels: {
+                //    format: '{value} %',
+                //    style: {
+                //        color: Highcharts.getOptions().colors[1]
+                //    }
+                //}
+            },
+            tooltip: {
+                headerFormat: '{series.name} à {point.x:%H\h%M}<br>',
+                pointFormat: '<b>{point.y:.1f}</b> %',
+                crosshairs: [true]
+            },
+            legend: {
+                enabled: false
+            },
+            series: [{
+                name: 'Humidité',
+                color: '#00B5AD',
+                marker: {
+                    enabled: false
+                },
+                //shadow : true,
+                data: [{% for data in graph_data %}[({{ data.time|date:"U" }}+{{ data.time|date:"Z"}})*1000,{{ data.moist|stringformat:".2f" }}]{% if not forloop.last %},{% endif %}{% endfor %}]
+            }]
+        });
+
+        // Dew chart
+        $('#dew').highcharts({
+            chart: {
+                type: 'spline',
+                //zoomType: 'x'
+            },
+            title: {
+                text: null //'Point de rosée'
+            },
+            subtitle: {
+                text: 'Point de rosée ( °C )'
+            },
+            xAxis: {
+                type: 'datetime',
+                gridLineWidth: 1,
+                dateTimeLabelFormats: {
+                    minute: '%H:%M'
+                },
+                plotBands: [{
+                    color: '#F9FAFB',
+                    from: minuit - 86400000,
+                    to: minuit
+                }]
+            },
+            yAxis: {
+                title: {
+                    text: null
+                }//,
+                //labels: {
+                //    format: '{value} °C',
+                //    style: {
+                //        color: Highcharts.getOptions().colors[1]
+                //    }
+                //}
+            },
+            tooltip: {
+                headerFormat: '{series.name} à {point.x:%H\h%M}<br>',
+                pointFormat: '<b>{point.y:.1f}</b> °C',
+                crosshairs: [true]
+            },
+            legend: {
+                enabled: false
+            },
+            series: [{
+                name: 'Point de rosée',
+                color: '#00B5AD',
+                marker: {
+                    enabled: false
+                },
+                //shadow : true,
+                data: [{% for data in graph_data %}[({{ data.time|date:"U" }}+{{ data.time|date:"Z"}})*1000,{{ data.dew|stringformat:".2f" }}]{% if not forloop.last %},{% endif %}{% endfor %}]
+            }]
+        });
+
+    });
+        </script>
+
+    <!--</div>
+    <div class="ui attached segment">-->
+
+        <div class="ui teal large ribbon label space"><i class="table icon"></i> Tableau des mesures pour les 24 dernières heures </div>
+
+        <table class="ui five column unstackable selectable compact striped celled table"> <!-- fixed -->
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Température</th>
+                    <th>Pression</th>
+                    <th>Humidité</th>
+                    <th>Point de rosée</th>
+                </tr>
+            </thead>
+            <tbody>
+
+            {% if table_data %}
+                {% for data in table_data %}
+                <tr>
+                  <td>{{ data.time|time:"H:i" }}</td>
+                  <td>{{ data.temp|stringformat:".1f" }}<span class="unit">&nbsp;°C</span></td>
+                  <td>{{ data.press|stringformat:".1f" }}<span class="unit">&nbsp;hPa</span></td>
+                  <td>{{ data.moist|stringformat:".1f" }}<span class="unit">&nbsp;%</span></td>
+                  <td>{{ data.dew|stringformat:".1f" }}<span class="unit">&nbsp;°C</span></td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                  <td>null</td>
+                  <td>null</td>
+                  <td>null</td>
+                  <td>null</td>
+                  <td>null</td>
+                </tr>
+            {% endif %}
+
+            </tbody>
+        </table>
+
+    </div>
+{% endblock %}

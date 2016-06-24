@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block highcharts %}<script src="https://code.highcharts.com/highcharts.js"></script>{% endblock %}
+{% block title %}PiMeteo - Station météo DIY à Montpellier{% endblock %}
+{% block active_hist %}active{% endblock %}
+
+{% block content %}
+    <div class="ui attached segment">
+
+        <div class="ui teal large ribbon label"><i class="bar chart icon"></i> Graphiques sur une semaine </div>
+
+        <div class="column" id="temp"></div>
+        <div class="column" id="press"></div>
+        <div class="column" id="moist"></div>
+        <div class="column" id="dew"></div>
+
+    <script>
+
+    $(function () {
+
+        Highcharts.setOptions({
+            //global: {
+            //    timezoneOffset: -2 * 60 // UTC+2
+            //},
+            lang: {
+                decimalPoint: ","
+            },
+            credits: {
+                enabled: false
+            }
+        });
+
+        var jours = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
+        var minuit = {{ midnight|date:"U"}}*1000; // UTC+2 back to UTC
+
+        // Temperature chart
+        $('#temp').highcharts({
+            chart: {
+                type: 'spline',
+                //zoomType: 'x'
+            },
+            title: {
+                text: 'Température'
+            },
+            subtitle: {
+                text: 'sous abris ventilé ( ±0,35 °C )'
+            },
+            xAxis: {
+                type: 'datetime',
+                gridLineWidth: 1,
+                dateTimeLabelFormats: {
+                    minute: '%H:%M'
+                },
+                tickInterval: 24 * 3600 * 1000, // one day
+                plotBands: [
+                    {
+                        color: '#F9FAFB',
+                        from: minuit - 86400000,
+                        to: minuit
+                    },{
+                        color: '#F9FAFB',
+                        from: minuit - 86400000*3,
+                        to: minuit - 86400000*2
+                    },{
+                        color: '#F9FAFB',
+                        from: minuit - 86400000*5,
+                        to: minuit - 86400000*4
+                    },{
+                        color: '#F9FAFB',
+                        from: minuit - 86400000*7,
+                        to: minuit - 86400000*6
+                    }
+                ]
+            },
+            yAxis: {
+                title: {
+                    text: null
+                },
+                labels: {
+                    format: '{value} °C',
+                    style: {
+                        color: Highcharts.getOptions().colors[1]
+                    }
+                }
+            },
+            tooltip: {
+                headerFormat: '{series.name} à {point.x:%H\h%M}<br>',
+                pointFormat: '<b>{point.y:.1f}</b> °C',
+                crosshairs: [true]
+            },
+            legend: {
+                enabled: false
+            },
+            series: [{
+                name: 'Température',
+                color: '#00B5AD',
+                marker: {
+                    enabled: false
+                },
+                //shadow : true,
+                data: [{% for data in week_data %}[({{ data.time|date:"U" }}+{{ data.time|date:"Z"}})*1000,{{ data.temp|stringformat:".1f" }}]{% if not forloop.last %},{% endif %}{% endfor %}]
+            }]
+        });
+
+        // Pression chart
+        $('#press').highcharts({
+            chart: {
+                type: 'spline',
+                //zoomType: 'x'
+            },
+            title: {
+                text: 'Pression atmosphérique'
+            },
+            subtitle: {
+                text: 'ramenée au niveau de la mer ( hPa )'
+            },
+            xAxis: {
+                type: 'datetime',
+                gridLineWidth: 1,
+                dateTimeLabelFormats: {
+                    minute: '%H:%M'
+                },
+                tickInterval: 24 * 3600 * 1000, // one day
+                plotBands: [
+                    {
+                        color: '#F9FAFB',
+                        from: minuit - 86400000,
+                        to: minuit
+                    },{
+                        color: '#F9FAFB',
+                        from: minuit - 86400000*3,
+                        to: minuit - 86400000*2
+                    },{
+                        color: '#F9FAFB',
+                        from: minuit - 86400000*5,
+                        to: minuit - 86400000*4
+                    },{
+                        color: '#F9FAFB',
+                        from: minuit - 86400000*7,
+                        to: minuit - 86400000*6
+                    }
+                ]
+            },
+            yAxis: {
+                title: {
+                    text: null
+                },
+                labels: {
+                    format: '{value} hPa',
+                    style: {
+                        color: Highcharts.getOptions().colors[1]
+                    }
+                }
+            },
+            tooltip: {
+                headerFormat: '{series.name} à {point.x:%H\h%M}<br>',
+                pointFormat: '<b>{point.y:.1f}</b> hPa',
+                crosshairs: [true]
+            },
+            legend: {
+                enabled: false
+            },
+            series: [{
+                name: 'Pression',
+                color: '#00B5AD',
+                marker: {
+                    enabled: false
+                },
+                //shadow : true,
+                data: [{% for data in week_data %}[({{ data.time|date:"U" }}+{{ data.time|date:"Z"}})*1000,{{ data.press|stringformat:".1f" }}]{% if not forloop.last %},{% endif %}{% endfor %}]
+            }]
+        });
+
+        // Moisture chart
+        $('#moist').highcharts({
+            chart: {
+                type: 'spline',
+                //zoomType: 'x'
+            },
+            title: {
+                text: 'Humidité relative'
+            },
+            subtitle: {
+                text: '( ±2 % )'
+            },
+            xAxis: {
+                type: 'datetime',
+                gridLineWidth: 1,
+                dateTimeLabelFormats: {
+                    minute: '%H:%M'
+                },
+                tickInterval: 24 * 3600 * 1000, // one day
+                plotBands: [
+                    {
+                        color: '#F9FAFB',
+                        from: minuit - 86400000,
+                        to: minuit
+                    },{
+                        color: '#F9FAFB',
+                        from: minuit - 86400000*3,
+                        to: minuit - 86400000*2
+                    },{
+                        color: '#F9FAFB',
+                        from: minuit - 86400000*5,
+                        to: minuit - 86400000*4
+                    },{
+                        color: '#F9FAFB',
+                        from: minuit - 86400000*7,
+                        to: minuit - 86400000*6
+                    }
+                ]
+            },
+            yAxis: {
+                title: {
+                    text: null
+                },
+                labels: {
+                    format: '{value} %',
+                    style: {
+                        color: Highcharts.getOptions().colors[1]
+                    }
+                }
+            },
+            tooltip: {
+                headerFormat: '{series.name} à {point.x:%H\h%M}<br>',
+                pointFormat: '<b>{point.y:.1f}</b> %',
+                crosshairs: [true]
+            },
+            legend: {
+                enabled: false
+            },
+            series: [{
+                name: 'Humidité',
+                color: '#00B5AD',
+                marker: {
+                    enabled: false
+                },
+                //shadow : true,
+                data: [{% for data in week_data %}[({{ data.time|date:"U" }}+{{ data.time|date:"Z"}})*1000,{{ data.moist|stringformat:".1f" }}]{% if not forloop.last %},{% endif %}{% endfor %}]
+            }]
+        });
+
+        // Dew chart
+        $('#dew').highcharts({
+            chart: {
+                type: 'spline',
+                //zoomType: 'x'
+            },
+            title: {
+                text: 'Point de rosée'
+            },
+            subtitle: {
+                text: '( °C )'
+            },
+            xAxis: {
+                type: 'datetime',
+                gridLineWidth: 1,
+                dateTimeLabelFormats: {
+                    minute: '%H:%M'
+                },
+                tickInterval: 24 * 3600 * 1000, // one day
+                plotBands: [
+                    {
+                        color: '#F9FAFB',
+                        from: minuit - 86400000,
+                        to: minuit
+                    },{
+                        color: '#F9FAFB',
+                        from: minuit - 86400000*3,
+                        to: minuit - 86400000*2
+                    },{
+                        color: '#F9FAFB',
+                        from: minuit - 86400000*5,
+                        to: minuit - 86400000*4
+                    },{
+                        color: '#F9FAFB',
+                        from: minuit - 86400000*7,
+                        to: minuit - 86400000*6
+                    }
+                ]
+            },
+            yAxis: {
+                title: {
+                    text: null
+                },
+                labels: {
+                    format: '{value} °C',
+                    style: {
+                        color: Highcharts.getOptions().colors[1]
+                    }
+                }
+            },
+            tooltip: {
+                headerFormat: '{series.name} à {point.x:%H\h%M}<br>',
+                pointFormat: '<b>{point.y:.1f}</b> °C',
+                crosshairs: [true]
+            },
+            legend: {
+                enabled: false
+            },
+            series: [{
+                name: 'Point de rosée',
+                color: '#00B5AD',
+                marker: {
+                    enabled: false
+                },
+                //shadow : true,
+                data: [{% for data in week_data %}[({{ data.time|date:"U" }}+{{ data.time|date:"Z"}})*1000,{{ data.dew|stringformat:".1f" }}]{% if not forloop.last %},{% endif %}{% endfor %}]
+            }]
+        });
+
+    });
+    </script>
+
+    </div>
+{% endblock %}

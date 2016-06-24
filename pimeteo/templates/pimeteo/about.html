@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}PiMeteo - Station météo DIY à Montpellier{% endblock %}
+{% block active_about %}active{% endblock %}
+
+{% block content %}
+    <div class="ui attached segment">
+
+	    <div class="ui teal large ribbon label about-space"><i class="quote left icon"></i> A propos </div>
+
+		<p>Cette station utilise un Raspberry Pi comme unité centrale. Un script Python lit et enregistre les données mesurées par les capteurs dans une base de donnée PostgreSQL locale.
+		Une copie de ces données est instantanément transmise vers un serveur web assurant un QoS (Quality of Service) suffisant pour ne perdre aucune donnée en cas d'indisponibilité du réseau internet.</p>
+		<p>Les capteurs retenus sont un SoC Sensirion SHT15 pour la température et l'humidité. La pression est mesurée par un capteur Bosh Sensortec BMP180. Ils ont été choisis pour leur grande précision et leur facilité d'interfaçage (SPI, I2C). Ils sont installés dans un abri à lamelles et ventilation active.</p>
+		<p>Côté station météo, la programation est faite en Language Python, avec un execution des mesures par tâche Cron.</p>
+		<p>Côté site web, la technologie utilisée est toujours basée sur Python grâce au framework Django. Le tout servi par Gunicorn, un serveur web pur Python configuré derrière Nginx en reverse proxy.</p>
+		<img class="ui medium rounded image" src="/static/media/station.jpg">
+    </div>
+{% endblock %}
